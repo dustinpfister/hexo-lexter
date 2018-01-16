@@ -15,31 +15,46 @@ natural = require('natural'),
 
 tokenizer = new natural.WordTokenizer();
 
-// make a data file for the given post
-mkDataFile = function (post) {
+// make a new data object for the given post
+mkData_start = function (post) {
 
-    let dir_data = path.join(hexo.base_dir, 'source', '_data'),
-    fileName = 'lexter-' + post.slug + '.json',
-    dir = path.join(dir_data, fileName),
-
-    $ = cheerio.load(post.content),
+    let $ = cheerio.load(post.content),
 
     data = {};
 
+    data.slug = post.slug;
     data.tokens_p = tokenizer.tokenize($('p').text());
     data.wc = data.tokens_p.length;
 
-    let json = JSON.stringify(data);
-
     // start by ensuring the _data folder in source
-    return fs.ensureDir(dir_data).then(function () {
+    return new Promise(function (resolve, reject) {
 
-        // write data file
+        // just resolve with data for now
+        resolve(data);
+
+    });
+
+};
+
+let mkDataFile = function (post) {
+
+    let dir_data = path.join(hexo.base_dir, 'source', '_data'),
+    fileName = 'lexter-' + post.slug + '.json',
+    dir = path.join(dir_data, fileName);
+
+    // ensure data path is there
+    fs.ensureDir(dir_data).then(function () {
+
+        // make the data object
+        return mkData_start(post);
+
+    }).then(function (data) {
+
+	    // write out the data object
+        let json = JSON.stringify(data);
+
+        // make sure data path is in the source folder
         return fs.writeFile(dir, json, 'utf-8');
-
-    }).then(function (json) {
-
-        console.log('success with: ' + fileName);
 
     }).catch (function (e) {
 
