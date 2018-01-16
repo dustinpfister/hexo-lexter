@@ -1,0 +1,27 @@
+{
+  "name": "hexo-lexter",
+  "version": "1.0.0",
+  "description": "Lexical analysis of blog posts in a hexo powered website",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dustinpfister/hexo-lexter.git"
+  },
+  "keywords": [
+    "lexical",
+    "analysis",
+    "word",
+    "count",
+    "hexo",
+    "plugin"
+  ],
+  "author": "Dustin Pfister",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/dustinpfister/hexo-lexter/issues"
+  },
+  "homepage": "https://github.com/dustinpfister/hexo-lexter#readme"
+}
