@@ -23,5 +23,9 @@
   "bugs": {
     "url": "https://github.com/dustinpfister/hexo-lexter/issues"
   },
-  "homepage": "https://github.com/dustinpfister/hexo-lexter#readme"
+  "homepage": "https://github.com/dustinpfister/hexo-lexter#readme",
+  "dependencies": {
+    "fs-extra": "^5.0.0",
+    "natural": "^0.5.6"
+  }
 }
