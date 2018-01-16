@@ -50,7 +50,7 @@ let mkDataFile = function (post) {
 
     }).then(function (data) {
 
-	    // write out the data object
+        // write out the data object
         let json = JSON.stringify(data);
 
         // make sure data path is in the source folder
@@ -84,7 +84,7 @@ let tabWC = function (site, content, el) {
 
 };
 
-hexo.extend.generator.register('report', function (locals) {
+hexo.extend.generator.register('lexter_report', function (locals) {
 
     // site wide data
     let site = {};
@@ -164,5 +164,21 @@ hexo.extend.generator.register('report', function (locals) {
         layout: ['report']
 
     });
+
+});
+
+// basic info for the given blog post
+hexo.extend.helper.register('lexter_basic_info', function (site, post) {
+
+    let data = site.data['lexter-' + post.slug],
+    html = '<div><p>Lexter post info: </p>';
+
+    html += '<ul>';
+
+    html += '<li>Word Count: ' + data.wc + '<\/li>'
+
+    html += '<\/ul>';
+
+    return html + '<\/div>';
 
 });
