@@ -115,6 +115,56 @@ let tabWC = function (site, content, el) {
 
 };
 
+let genPostObjects = function (locals, site, key) {
+
+    // create objects for each post that are used by the generator
+    return locals.posts.map(function (post) {
+
+        mkDataFile(post, key);
+
+        // tabulate site word count totals
+        let ct = {
+            total: 0
+        };
+        ct.p = tabWC(site, post.content, 'p');
+        ct.total += ct.p
+
+        let h = 1;
+        while (h < 7) {
+            ct['h' + h] = tabWC(site, post.content, 'h' + h);
+            ct.total += ct['h' + h];
+            h += 1;
+        }
+
+        site.wordCounts.posts.push({
+
+            path: post.path,
+            title: post.title,
+            ct: ct
+
+        });
+
+        // return object for post
+        return {
+
+            path: path.join('reports', post.path),
+            data: _.merge({}, locals, {
+                data: {
+                    report: true,
+                    post_path: post.path,
+                    site: site,
+                    ct: ct
+
+                }
+            }),
+            layout: ['report_post']
+
+        }
+
+    });
+
+};
+
 hexo.extend.generator.register('lexter_report', function (locals) {
 
     // site wide data
@@ -138,77 +188,43 @@ hexo.extend.generator.register('lexter_report', function (locals) {
     site.wordCounts.h6 = 0;
     site.wordCounts.posts = [];
 
-    getKeywordsFile().then(function (result) {
+    return getKeywordsFile().then(function (result) {
 
         console.log('keywords!');
+        return _.merge({site: [],posts: []}, result);
 
-        key = _.merge(key, result);
-        console.log(key);
+    }).catch (function (e) {
 
-    });
+        console.log('error with lexter_keywords.json file');
+        console.log(e);
 
-    // update site object on a per post basis
-    // and create a posts object that will be returned
-    // to create paths on a for post basis
-    let posts = locals.posts.map(function (post) {
+        return {
+            site: [],
+            posts: []
+        };
 
-            mkDataFile(post);
+    })
+        .then(function (key) {
 
-            // tabulate site word count totals
-            let ct = {
-                total: 0
-            };
-            ct.p = tabWC(site, post.content, 'p');
-            ct.total += ct.p
+            console.log('key:');
+            console.log(key);
 
-            let h = 1;
-            while (h < 7) {
-                ct['h' + h] = tabWC(site, post.content, 'h' + h);
-                ct.total += ct['h' + h];
-                h += 1;
-            }
+            return _.concat(genPostObjects(locals, site, key), {
 
-            site.wordCounts.posts.push({
-
-                path: post.path,
-                title: post.title,
-                ct: ct
+                path: 'reports/index.html',
+                data: _.merge(locals, {}, {
+                    data: {
+                        report: false,
+                        site: site,
+                        post_path: true,
+                        foo: ''
+                    }
+                }),
+                layout: ['report']
 
             });
 
-            // return object for post
-            return {
-
-                path: path.join('reports', post.path),
-                data: _.merge({}, locals, {
-                    data: {
-                        report: true,
-                        post_path: post.path,
-                        site: site,
-                        ct: ct
-
-                    }
-                }),
-                layout: ['report_post']
-
-            }
-
         });
-
-    return _.concat(posts, {
-
-        path: 'reports/index.html',
-        data: _.merge(locals, {}, {
-            data: {
-                report: false,
-                site: site,
-                post_path: true,
-                foo: ''
-            }
-        }),
-        layout: ['report']
-
-    });
 
 });
 
