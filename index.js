@@ -19,12 +19,15 @@ tokenizer = new natural.WordTokenizer();
 let mkData_start = function (post) {
 
     let $ = cheerio.load(post.content),
+    text = $('p').text(),
 
     data = {};
 
     data.slug = post.slug;
-    data.tokens_p = tokenizer.tokenize($('p').text());
-    data.wc = data.tokens_p.length;
+    data.content = text;
+    data.tokens = tokenizer.tokenize(text);
+    data.wc = data.tokens.length;
+    data.keywords = {};
 
     // start by ensuring the _data folder in source
     return new Promise(function (resolve, reject) {
@@ -36,7 +39,37 @@ let mkData_start = function (post) {
 
 };
 
-let mkDataFile = function (post) {
+let mkData_site_keywords = function (post, data, key) {
+
+    let keywords = key.site;
+    data.keywords.site = [];
+
+    keywords.map(function (keyword) {
+
+        let pat = new RegExp(keyword, 'g'),
+        ct = 0,
+        match = data.content.match(pat);
+
+        if (match) {
+
+            ct = match.length;
+
+            data.keywords.site.push({
+
+                keyword: keyword,
+                ct: ct
+
+            });
+
+        }
+
+    });
+
+    return data;
+
+}
+
+let mkDataFile = function (post, key) {
 
     let dir_data = path.join(hexo.base_dir, 'source', '_data'),
     fileName = 'lexter-' + post.slug + '.json',
@@ -50,8 +83,14 @@ let mkDataFile = function (post) {
 
     }).then(function (data) {
 
+        return mkData_site_keywords(post, data, key);
+
+    }).then(function (data) {
+
         // write out the data object
         let json = JSON.stringify(data);
+
+        console.log('data file for: ' + data.slug);
 
         // make sure data path is in the source folder
         return fs.writeFile(dir, json, 'utf-8');
@@ -191,7 +230,10 @@ hexo.extend.generator.register('lexter_report', function (locals) {
     return getKeywordsFile().then(function (result) {
 
         console.log('keywords!');
-        return _.merge({site: [],posts: []}, result);
+        return _.merge({
+            site: [],
+            posts: []
+        }, result);
 
     }).catch (function (e) {
 
