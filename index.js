@@ -24,22 +24,27 @@ let mkData_start = function (post) {
     data = {};
 
     data.slug = post.slug;
-    data.content = text;
-    data.tokens = tokenizer.tokenize(text);
-    data.wc = data.tokens.length;
+    //data.content = text;
+    //data.tokens = tokenizer.tokenize(text);
+    data.wc = tokenizer.tokenize(text).length;
     data.keywords = {};
 
     // start by ensuring the _data folder in source
     return new Promise(function (resolve, reject) {
 
         // just resolve with data for now
-        resolve(data);
+        resolve({
+
+            data: data,
+            content: text
+
+        });
 
     });
 
 };
 
-let mkData_site_keywords = function (post, data, key) {
+let mkData_site_keywords = function (post, data, content, key) {
 
     let keywords = key.site;
     data.keywords.site = [];
@@ -48,7 +53,7 @@ let mkData_site_keywords = function (post, data, key) {
 
         let pat = new RegExp(keyword, 'g'),
         ct = 0,
-        match = data.content.match(pat);
+        match = content.match(pat);
 
         if (match) {
 
@@ -81,9 +86,9 @@ let mkDataFile = function (post, key) {
         // make the data object
         return mkData_start(post);
 
-    }).then(function (data) {
+    }).then(function (obj) {
 
-        return mkData_site_keywords(post, data, key);
+        return mkData_site_keywords(post, obj.data, obj.content, key);
 
     }).then(function (data) {
 
@@ -159,8 +164,6 @@ let genPostObjects = function (locals, site, key) {
     // create objects for each post that are used by the generator
     return locals.posts.map(function (post) {
 
-        mkDataFile(post, key);
-
         // tabulate site word count totals
         let ct = {
             total: 0
@@ -190,6 +193,7 @@ let genPostObjects = function (locals, site, key) {
             data: _.merge({}, locals, {
                 data: {
                     report: true,
+					slug: post.slug,
                     post_path: post.path,
                     site: site,
                     ct: ct
@@ -203,6 +207,41 @@ let genPostObjects = function (locals, site, key) {
     });
 
 };
+
+
+hexo.extend.generator.register('lexter_data', function (locals) {
+
+    getKeywordsFile().then(function (result) {
+
+        console.log('keywords!');
+        return _.merge({
+            site: [],
+            posts: []
+        }, result);
+
+    }).catch (function (e) {
+
+        console.log('error with lexter_keywords.json file');
+        console.log(e);
+
+        return {
+            site: [],
+            posts: []
+        };
+
+    })
+        .then(function (key) {
+
+            locals.posts.forEach(function (post) {
+
+                mkDataFile(post, key);
+
+            });
+
+        });
+
+});
+
 
 hexo.extend.generator.register('lexter_report', function (locals) {
 
@@ -226,47 +265,44 @@ hexo.extend.generator.register('lexter_report', function (locals) {
     site.wordCounts.h5 = 0;
     site.wordCounts.h6 = 0;
     site.wordCounts.posts = [];
-
+    /*
     return getKeywordsFile().then(function (result) {
 
-        console.log('keywords!');
-        return _.merge({
-            site: [],
-            posts: []
-        }, result);
+    console.log('keywords!');
+    return _.merge({
+    site: [],
+    posts: []
+    }, result);
 
     }).catch (function (e) {
 
-        console.log('error with lexter_keywords.json file');
-        console.log(e);
+    console.log('error with lexter_keywords.json file');
+    console.log(e);
 
-        return {
-            site: [],
-            posts: []
-        };
+    return {
+    site: [],
+    posts: []
+    };
 
     })
-        .then(function (key) {
+    .then(function () {
+     */
+    return _.concat(genPostObjects(locals, site, key), {
 
-            console.log('key:');
-            console.log(key);
+        path: 'reports/index.html',
+        data: _.merge(locals, {}, {
+            data: {
+                report: false,
+                site: site,
+                post_path: true,
+                foo: ''
+            }
+        }),
+        layout: ['report']
 
-            return _.concat(genPostObjects(locals, site, key), {
+    });
 
-                path: 'reports/index.html',
-                data: _.merge(locals, {}, {
-                    data: {
-                        report: false,
-                        site: site,
-                        post_path: true,
-                        foo: ''
-                    }
-                }),
-                layout: ['report']
-
-            });
-
-        });
+    //        });
 
 });
 
