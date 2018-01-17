@@ -16,7 +16,7 @@ natural = require('natural'),
 tokenizer = new natural.WordTokenizer();
 
 // make a new data object for the given post
-mkData_start = function (post) {
+let mkData_start = function (post) {
 
     let $ = cheerio.load(post.content),
 
@@ -64,6 +64,37 @@ let mkDataFile = function (post) {
 
 };
 
+// get keywords at /source/lexter_keywords.json if there
+let getKeywordsFile = function () {
+
+    return new Promise(function (resolve, reject) {
+
+        let uri = path.join(hexo.source_dir, 'lexter_keywords.json');
+
+        fs.readFile(uri, 'utf-8').then(function (data) {
+
+            try {
+
+                let json = JSON.parse(data);
+
+                resolve(json);
+
+            } catch (e) {
+
+                reject(e);
+
+            }
+
+        }).catch (function (e) {
+
+            reject(e);
+
+        });
+
+    });
+
+};
+
 // tabulate word count for the given content, and element
 let tabWC = function (site, content, el) {
 
@@ -87,7 +118,12 @@ let tabWC = function (site, content, el) {
 hexo.extend.generator.register('lexter_report', function (locals) {
 
     // site wide data
-    let site = {};
+    let site = {},
+
+    key = {
+        site: [],
+        posts: []
+    };
 
     // site wide defaults
     site.postCount = locals.posts.length;
@@ -101,6 +137,15 @@ hexo.extend.generator.register('lexter_report', function (locals) {
     site.wordCounts.h5 = 0;
     site.wordCounts.h6 = 0;
     site.wordCounts.posts = [];
+
+    getKeywordsFile().then(function (result) {
+
+        console.log('keywords!');
+
+        key = _.merge(key, result);
+        console.log(key);
+
+    });
 
     // update site object on a per post basis
     // and create a posts object that will be returned
