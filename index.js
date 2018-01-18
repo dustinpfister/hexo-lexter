@@ -309,7 +309,7 @@ hexo.extend.generator.register('lexter_report', function (locals) {
 // basic info for the given blog post
 hexo.extend.helper.register('lexter_basic_info', function (site, post) {
 
-    let data = site.data['lexter-' + post.slug],
+    let data = site.data['lexter-' + post.slug] || {wc:0},
     html = '<div><p>Lexter post info: </p>';
 
     html += '<ul>';
